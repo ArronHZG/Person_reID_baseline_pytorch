@@ -1,0 +1,1 @@
+python train.py --gpu_ids 0 --name ft_ResNet50 --train_all --batchsize 32  --data_dir /home/arron/dataset/Market/pytorch

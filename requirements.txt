@@ -1,0 +1,4 @@
+matplotlib
+pretrainedmodels
+pyyaml
+scipy

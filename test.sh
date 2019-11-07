@@ -1,0 +1,1 @@
+python test.py --gpu_ids 0 --name ft_ResNet50 --test_dir /home/arron/dataset/Market/pytorch  --batchsize 32 --which_epoch 59
