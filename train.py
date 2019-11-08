@@ -88,7 +88,6 @@ transform_val_list = [
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ]
 
-# Part-based Convolutional Baseline
 if opt.PCB:
     transform_train_list = [
         transforms.Resize((384, 192), interpolation=3),
@@ -125,11 +124,8 @@ image_datasets['train'] = datasets.ImageFolder(os.path.join(data_dir, 'train' + 
 image_datasets['val'] = datasets.ImageFolder(os.path.join(data_dir, 'val'),
                                              data_transforms['val'])
 
-dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x],
-                                              batch_size=opt.batchsize,
-                                              shuffle=True,
-                                              num_workers=8, # 8 workers may work faster
-                                              pin_memory=True)
+dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=opt.batchsize,
+                                              shuffle=True, num_workers=8, pin_memory=True)  # 8 workers may work faster
                for x in ['train', 'val']}
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
 class_names = image_datasets['train'].classes
@@ -168,15 +164,12 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     warm_up = 0.1  # We start from the 0.1*lrRate
     warm_iteration = round(dataset_sizes['train'] / opt.batchsize) * opt.warm_epoch  # first 5 epoch
 
-    last_model_wts = None
-
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        # for phase in ['train', 'val']:
-        for phase in ['train']:
+        for phase in ['train', 'val']:
             if phase == 'train':
                 model.train(True)  # Set model to training mode
             else:
@@ -249,13 +242,11 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                     running_loss += loss.data[0] * now_batch_size
                 running_corrects += float(torch.sum(preds == labels.data))
 
-            if phase == 'train':
-                scheduler.step()
-
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects / dataset_sizes[phase]
 
-            print(f"{phase} lr {optimizer.param_groups[0]['lr']:.6f} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}")
+            print('{} Loss: {:.4f} Acc: {:.4f}'.format(
+                phase, epoch_loss, epoch_acc))
 
             y_loss[phase].append(epoch_loss)
             y_err[phase].append(1.0 - epoch_acc)
@@ -266,6 +257,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                     save_network(model, epoch)
                 draw_curve(epoch)
 
+            if phase == 'train':
+                scheduler.step()
 
         time_elapsed = time.time() - since
         print('Training complete in {:.0f}m {:.0f}s'.format(
@@ -375,7 +368,7 @@ exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=40, gamma=0.1)
 # Train and evaluate
 # ^^^^^^^^^^^^^^^^^^
 #
-# It should take around 1-2 hours on GPU. 
+# It should take around 1-2 hours on GPU.
 #
 dir_name = os.path.join('./model', name)
 if not os.path.isdir(dir_name):
@@ -398,4 +391,4 @@ if fp16:
 criterion = nn.CrossEntropyLoss()
 
 model = train_model(model, criterion, optimizer_ft, exp_lr_scheduler,
-                    num_epochs=60)
+                    num_epochs=40)
