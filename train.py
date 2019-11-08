@@ -168,12 +168,15 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     warm_up = 0.1  # We start from the 0.1*lrRate
     warm_iteration = round(dataset_sizes['train'] / opt.batchsize) * opt.warm_epoch  # first 5 epoch
 
+    last_model_wts = None
+
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
+        # for phase in ['train', 'val']:
+        for phase in ['train']:
             if phase == 'train':
                 model.train(True)  # Set model to training mode
             else:
@@ -252,7 +255,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects / dataset_sizes[phase]
 
-            print(f"{phase} lr {optimizer.param_group[0]['lr']} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}")
+            print(f"{phase} lr {optimizer.param_groups[0]['lr']:.6f} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}")
 
             y_loss[phase].append(epoch_loss)
             y_err[phase].append(1.0 - epoch_acc)
@@ -390,7 +393,7 @@ model = model.cuda()
 if fp16:
     # model = network_to_half(model)
     # optimizer_ft = FP16_Optimizer(optimizer_ft, static_loss_scale = 128.0)
-    model, optimizer_ft = amp.initialize(model, optimizer_ft, opt_level="O1")
+    model, optimizer_ft = amp.initialize(model, optimizer_ft, opt_level="O2")
 
 criterion = nn.CrossEntropyLoss()
 

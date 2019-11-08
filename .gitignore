@@ -32,3 +32,5 @@ core
 *.npy
 *.pt
 *.pth
+
+.idea
